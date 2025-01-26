@@ -18,10 +18,5 @@ namespace Lanceur_logiciel
             Application.SetCompatibleTextRenderingDefault(false); // active la compatibilité avec les contrôles
             Application.Run(new Form1()); // lance l'application avec le formulaire Form1
         }
-
-        /// <summary>
-        /// Création d'un formulaire pour ajouter l'application dans un JSON
-        /// </summary>
-
     }
 }
