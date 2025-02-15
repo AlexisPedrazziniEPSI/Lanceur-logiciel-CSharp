@@ -119,16 +119,7 @@ namespace Lanceur_logiciel
         /// <param name="e"></param>
         private void Form1_Load(object sender, EventArgs e)
         {
-            // Supprimer uniquement les boutons dynamiques (ceux qui ont un Tag "Logiciel")
-            foreach (var btn in this.Controls.OfType<Button>())
-            {
-                if (btn.Tag == "Logiciel")
-                {
-                    this.Controls.Remove(btn); // Supprimer le bouton
-                }
-            }
-
-            int maxCol = 5; // Nombre max de colonnes
+            int maxCol = 6; // Nombre max de colonnes
             int paddingX = 10, paddingY = 50; // Espacement
             int btnWidth = 120, btnHeight = 40; // Taille des boutons
 
@@ -145,10 +136,10 @@ namespace Lanceur_logiciel
                 {
                     Button button = new Button
                     {
+                        Name = "btn_logiciel_" + item.Nom, // Identifiant unique pour ne supprimer que les boutons logiciels
                         Text = item.Nom,
                         Size = new Size(btnWidth, btnHeight),
-                        Location = new Point(10 + col * (btnWidth + paddingX), 30 + row * (btnHeight + paddingY)),
-                        Tag = "Logiciel" // Marquer ce bouton comme un bouton de logiciel
+                        Location = new Point(10 + col * (btnWidth + paddingX), 30 + row * (btnHeight + paddingY))
                     };
 
                     button.Click += (s, ev) =>
@@ -182,38 +173,46 @@ namespace Lanceur_logiciel
         /// <param name="e"></param>
         private void button2_Click_1(object sender, EventArgs e)
         {
-            var nom = Microsoft.VisualBasic.Interaction.InputBox("Nom de l'application à supprimer", "Supprimer une application", "");
+            string nom = Microsoft.VisualBasic.Interaction.InputBox("Nom de l'application à supprimer", "Supprimer une application", "");
 
-            if (nom == null)
+            if (string.IsNullOrWhiteSpace(nom)) // Vérifier si le nom est vide
             {
-                throw new Exception("Veuillez entrez un nom d'application valide");
+                MessageBox.Show("Veuillez entrer un nom d'application valide", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
 
-            string jsonPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "logiciel.json"); // Chemin du fichier JSON
-            var contenueJson = File.ReadAllText(jsonPath); // On lit le fichier JSON
-            List<Logiciel> logiciels = JsonConvert.DeserializeObject<List<Logiciel>>(contenueJson) ?? new List<Logiciel>(); // On récupère la liste des logiciels ou on crée une nouvelle liste vide en cas d'erreur
+            string jsonPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "logiciel.json");
 
-            Boolean found = false;
-
-            foreach (var item in logiciels)
+            if (!File.Exists(jsonPath)) // Vérifier si le fichier qui liste les applications existe
             {
-                if (item.Nom == nom)
+                MessageBox.Show("Aucune application enregistrée", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string contenuJson = File.ReadAllText(jsonPath);
+            List<Logiciel> logiciels = JsonConvert.DeserializeObject<List<Logiciel>>(contenuJson) ?? new List<Logiciel>();
+
+            // Trouver et supprimer l'élément
+            Logiciel logicielASupprimer = logiciels.FirstOrDefault(l => l.Nom.Equals(nom, StringComparison.OrdinalIgnoreCase));
+
+            if (logicielASupprimer != null)
+            {
+                logiciels.Remove(logicielASupprimer); // Supprimer l'élément
+                File.WriteAllText(jsonPath, JsonConvert.SerializeObject(logiciels, Formatting.Indented)); // Sauvegarder les modifications
+
+                MessageBox.Show("Application supprimée", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // Supprimer le bouton correspondant
+                var boutonASupprimer = this.Controls.OfType<Button>().FirstOrDefault(btn => btn.Name == "btn_logiciel_" + nom);
+                if (boutonASupprimer != null)
                 {
-                    found = true;
-                    logiciels.Remove(item);
-                    File.WriteAllText(jsonPath, JsonConvert.SerializeObject(logiciels, Formatting.Indented));
-                    MessageBox.Show("Application supprimée", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return; // on sort de la boucle
+                    this.Controls.Remove(boutonASupprimer);
                 }
             }
-            // si rien n'a été trouvé
-            if (!found)
+            else
             {
                 MessageBox.Show("Aucune application trouvée", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-
-            // recharge le formulaire
-            Form1_Load(null, null);
         }
     }
 }
