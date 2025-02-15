@@ -1,13 +1,9 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Lanceur_logiciel
@@ -74,7 +70,6 @@ namespace Lanceur_logiciel
                 File.WriteAllText(jsonPath, JsonConvert.SerializeObject(logiciels, Formatting.Indented));
 
                 // Affiche un message et rafraîchit le formulaire
-                MessageBox.Show("Fichier enregistré", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 this.Refresh();
 
                 Form1_Load(null, null); // Recharge l'affichage
@@ -173,6 +168,7 @@ namespace Lanceur_logiciel
         /// <param name="e"></param>
         private void button2_Click_1(object sender, EventArgs e)
         {
+            // crée une fenêtre de dialogue pour demander le nom de l'application à supprimer
             string nom = Microsoft.VisualBasic.Interaction.InputBox("Nom de l'application à supprimer", "Supprimer une application", "");
 
             if (string.IsNullOrWhiteSpace(nom)) // Vérifier si le nom est vide
@@ -200,8 +196,6 @@ namespace Lanceur_logiciel
                 logiciels.Remove(logicielASupprimer); // Supprimer l'élément
                 File.WriteAllText(jsonPath, JsonConvert.SerializeObject(logiciels, Formatting.Indented)); // Sauvegarder les modifications
 
-                MessageBox.Show("Application supprimée", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
                 // Supprimer le bouton correspondant
                 var boutonASupprimer = this.Controls.OfType<Button>().FirstOrDefault(btn => btn.Name == "btn_logiciel_" + nom);
                 if (boutonASupprimer != null)
@@ -212,6 +206,42 @@ namespace Lanceur_logiciel
             else
             {
                 MessageBox.Show("Aucune application trouvée", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        /// <summary>
+        /// Le but est de supprimer toutes les applications de la liste
+        /// </summary>
+        private void button3_Click_1(object sender, EventArgs e)
+        {
+            string jsonPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "logiciel.json");
+            if (File.Exists(jsonPath))
+            {
+                var contenuJson = File.ReadAllText(jsonPath);
+                List<Logiciel> logiciels = JsonConvert.DeserializeObject<List<Logiciel>>(contenuJson) ?? new List<Logiciel>();
+
+                if (logiciels.Count > 0) // Si il y a au moins un logiciel dans la liste
+                {
+                    var allButton = this.Controls.OfType<Button>().Where(btn => btn.Name.StartsWith("btn_logiciel_")).ToList();
+
+                    foreach (var button in allButton)
+                    {
+                        this.Controls.Remove(button);
+                    }
+
+                    // Supprimer le fichier JSON
+                    File.Delete(jsonPath);
+
+                    MessageBox.Show("Toutes les applications ont été supprimées", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Aucune application à supprimer", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Aucune application enregistrée", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
     }
