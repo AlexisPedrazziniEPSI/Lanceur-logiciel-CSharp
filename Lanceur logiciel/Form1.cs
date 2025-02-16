@@ -152,7 +152,13 @@ namespace Lanceur_logiciel
                     {
                         try
                         {
-                            System.Diagnostics.Process.Start(Path.Combine(item.Chemin, item.Nom + ".exe"));
+                            // Lancer l'application
+                            var startInfo = new System.Diagnostics.ProcessStartInfo()
+                            {
+                                FileName = Path.Combine(item.Chemin, item.Nom + ".exe"),
+                                UseShellExecute = true // Permet d'éviter une détection de la schizophrénie de Windows Defender
+                            };
+                            System.Diagnostics.Process.Start(startInfo);
                         }
                         catch (Exception ex)
                         {
