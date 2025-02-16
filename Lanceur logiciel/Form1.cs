@@ -86,24 +86,35 @@ namespace Lanceur_logiciel
             // On récupère le chemin du fichier JSON
             string path = System.IO.Path.GetDirectoryName(Application.ExecutablePath) + "\\logiciel.json";
 
+            if (!File.Exists(path))
+            {
+                MessageBox.Show("Aucun logiciel enregistré.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             // On lit le fichier JSON
             string json = System.IO.File.ReadAllText(path);
 
             // On récupère le nom et le chemin de l'application
-            string[] tab = Newtonsoft.Json.JsonConvert.DeserializeObject<string[]>(json);
-            string nom = tab[0];
-            string chemin = tab[1];
-
-            // exception si le fichier n'existe pas
-            Exception.ReferenceEquals(chemin, null);
-
-            // On lance l'application
-            try {  
-                System.Diagnostics.Process.Start(chemin + "\\" + nom + ".exe");
-            }
-            catch (Exception ex)
+            List<Logiciel> logiciels = JsonConvert.DeserializeObject<List<Logiciel>>(json) ?? new List<Logiciel>();
+            if (logiciels.Count > 0)
             {
-                MessageBox.Show("Erreur : " + ex.Message, "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Logiciel premierLogiciel = logiciels[0];
+                string nom = premierLogiciel.Nom;
+                string chemin = premierLogiciel.Chemin;
+            
+
+                // exception si le fichier n'existe pas
+                Exception.ReferenceEquals(chemin, null);
+
+                // On lance l'application
+                try {  
+                    System.Diagnostics.Process.Start(chemin + "\\" + nom + ".exe");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Erreur : " + ex.Message, "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
