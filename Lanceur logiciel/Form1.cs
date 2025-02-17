@@ -76,47 +76,6 @@ namespace Lanceur_logiciel
             }
         }
 
-        /// <summary>
-        /// le but est de lancer l'application enregistrée dans le fichier JSON
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void button2_Click(object sender, EventArgs e)
-        {
-            // On récupère le chemin du fichier JSON
-            string path = System.IO.Path.GetDirectoryName(Application.ExecutablePath) + "\\logiciel.json";
-
-            if (!File.Exists(path))
-            {
-                MessageBox.Show("Aucun logiciel enregistré.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            // On lit le fichier JSON
-            string json = System.IO.File.ReadAllText(path);
-
-            // On récupère le nom et le chemin de l'application
-            List<Logiciel> logiciels = JsonConvert.DeserializeObject<List<Logiciel>>(json) ?? new List<Logiciel>();
-            if (logiciels.Count > 0)
-            {
-                Logiciel premierLogiciel = logiciels[0];
-                string nom = premierLogiciel.Nom;
-                string chemin = premierLogiciel.Chemin;
-            
-
-                // exception si le fichier n'existe pas
-                Exception.ReferenceEquals(chemin, null);
-
-                // On lance l'application
-                try {  
-                    System.Diagnostics.Process.Start(chemin + "\\" + nom + ".exe");
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Erreur : " + ex.Message, "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-        }
 
         /// <summary>
         /// création de la grille de bouton
@@ -239,6 +198,12 @@ namespace Lanceur_logiciel
             }
         }
 
+        /// <summary>
+        /// Supprime tous les boutons de l'interface pour réactualiser la liste correctement
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <param name="SupData"></param>
         private void delete_buttons(object sender, EventArgs e, bool SupData)
         {
             var allButton = this.Controls.OfType<Button>().Where(btn => btn.Name.StartsWith("btn_logiciel_")).ToList();
@@ -248,7 +213,7 @@ namespace Lanceur_logiciel
                 this.Controls.Remove(button);
             }
 
-            if (SupData)
+            if (SupData) // en cas de suppression de toutes les applications de la liste
             {
                 string jsonPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "logiciel.json");
                 if (File.Exists(jsonPath))
