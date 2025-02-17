@@ -214,11 +214,8 @@ namespace Lanceur_logiciel
                 File.WriteAllText(jsonPath, JsonConvert.SerializeObject(logiciels, Formatting.Indented)); // Sauvegarder les modifications
 
                 // Supprimer le bouton correspondant
-                var boutonASupprimer = this.Controls.OfType<Button>().FirstOrDefault(btn => btn.Name == "btn_logiciel_" + nom);
-                if (boutonASupprimer != null)
-                {
-                    this.Controls.Remove(boutonASupprimer);
-                }
+                delete_buttons(sender, e, false);
+                Form1_Load(null, null); // Recharge l'affichage
             }
             else
             {
@@ -234,31 +231,31 @@ namespace Lanceur_logiciel
             string jsonPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "logiciel.json");
             if (File.Exists(jsonPath))
             {
-                var contenuJson = File.ReadAllText(jsonPath);
-                List<Logiciel> logiciels = JsonConvert.DeserializeObject<List<Logiciel>>(contenuJson) ?? new List<Logiciel>();
-
-                if (logiciels.Count > 0) // Si il y a au moins un logiciel dans la liste
-                {
-                    var allButton = this.Controls.OfType<Button>().Where(btn => btn.Name.StartsWith("btn_logiciel_")).ToList();
-
-                    foreach (var button in allButton)
-                    {
-                        this.Controls.Remove(button);
-                    }
-
-                    // Supprimer le fichier JSON
-                    File.Delete(jsonPath);
-
-                    MessageBox.Show("Toutes les applications ont été supprimées", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    MessageBox.Show("Aucune application à supprimer", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
+                delete_buttons(sender, e, true);
             }
             else
             {
                 MessageBox.Show("Aucune application enregistrée", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void delete_buttons(object sender, EventArgs e, bool SupData)
+        {
+            var allButton = this.Controls.OfType<Button>().Where(btn => btn.Name.StartsWith("btn_logiciel_")).ToList();
+
+            foreach (var button in allButton)
+            {
+                this.Controls.Remove(button);
+            }
+
+            if (SupData)
+            {
+                string jsonPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "logiciel.json");
+                if (File.Exists(jsonPath))
+                {
+                    File.Delete(jsonPath);
+                    MessageBox.Show("Toutes les applications ont été supprimées", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
         }
     }
