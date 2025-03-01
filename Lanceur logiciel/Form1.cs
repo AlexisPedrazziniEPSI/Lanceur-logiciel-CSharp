@@ -18,9 +18,10 @@ namespace Lanceur_logiciel
 
         public class Logiciel
         {
-            public string Nom { get; set; }
+            public string NomAffichage { get; set; }
             public string Chemin { get; set; }
-            public string extention { get; set; }
+            public string NomFichier { get; set; }
+            public string Extention { get; set; }
         }
 
         /// <summary>
@@ -47,9 +48,10 @@ namespace Lanceur_logiciel
                 // On crée un fichier JSON qui va répertorier le chemin de l'application + le nom de l'application sans le .exe ni le chemin
                 Logiciel nouveauLogiciel = new Logiciel
                 {
-                    Nom = Path.GetFileNameWithoutExtension(fichier),
+                    NomAffichage = Path.GetFileNameWithoutExtension(fichier),
                     Chemin = Path.GetDirectoryName(fichier),
-                    extention = Path.GetExtension(fichier)
+                    NomFichier = Path.GetFileNameWithoutExtension(fichier),
+                    Extention = Path.GetExtension(fichier)
                 };
 
                 // chemin vers le jsooon
@@ -103,8 +105,8 @@ namespace Lanceur_logiciel
                 {
                     Button button = new Button
                     {
-                        Name = "btn_logiciel_" + item.Nom, // Identifiant unique pour ne supprimer que les boutons logiciels
-                        Text = item.Nom,
+                        Name = "btn_logiciel_" + item.NomAffichage, // Identifiant unique pour ne supprimer que les boutons logiciels
+                        Text = item.NomAffichage,
                         Size = new Size(btnWidth, btnHeight),
                         Location = new Point(10 + col * (btnWidth + paddingX), 30 + row * (btnHeight + paddingY))
                     };
@@ -116,7 +118,7 @@ namespace Lanceur_logiciel
                             // Lancer l'application
                             var startInfo = new System.Diagnostics.ProcessStartInfo()
                             {
-                                FileName = Path.Combine(item.Chemin, item.Nom + item.extention),
+                                FileName = Path.Combine(item.Chemin, item.NomFichier + item.Extention),
                                 UseShellExecute = true // Permet d'éviter une détection de la schizophrénie de Windows Defender
                             };
                             System.Diagnostics.Process.Start(startInfo);
@@ -146,15 +148,7 @@ namespace Lanceur_logiciel
         /// <param name="e"></param>
         private void button2_Click_1(object sender, EventArgs e)
         {
-            // crée une fenêtre de dialogue pour demander le nom de l'application à supprimer
-            string nom = Microsoft.VisualBasic.Interaction.InputBox("Nom de l'application à supprimer", "Supprimer une application", "");
-
-            if (string.IsNullOrWhiteSpace(nom)) // Vérifier si le nom est vide
-            {
-                MessageBox.Show("Veuillez entrer un nom d'application valide", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
+            // crée une fenêtre de dialogue pour demander le nom de l'application à renommer avec une choice box
             string jsonPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "logiciel.json");
 
             if (!File.Exists(jsonPath)) // Vérifier si le fichier qui liste les applications existe
@@ -166,21 +160,41 @@ namespace Lanceur_logiciel
             string contenuJson = File.ReadAllText(jsonPath);
             List<Logiciel> logiciels = JsonConvert.DeserializeObject<List<Logiciel>>(contenuJson) ?? new List<Logiciel>();
 
-            // Trouver et supprimer l'élément
-            Logiciel logicielASupprimer = logiciels.FirstOrDefault(l => l.Nom.Equals(nom, StringComparison.OrdinalIgnoreCase));
+            // Créer une liste de noms d'applications
+            List<string> nomsApplications = logiciels.Select(l => l.NomAffichage).ToList();
 
-            if (logicielASupprimer != null)
+            // Créer une boîte de dialogue avec une liste déroulante
+            using (Form form = new Form())
             {
-                logiciels.Remove(logicielASupprimer); // Supprimer l'élément
-                File.WriteAllText(jsonPath, JsonConvert.SerializeObject(logiciels, Formatting.Indented)); // Sauvegarder les modifications
+                Label label = new Label() { Left = 50, Top = 20, Text = "Sélectionnez une application à supprimer" };
+                ComboBox comboBox = new ComboBox() { Left = 50, Top = 50, Width = 200 };
+                comboBox.DataSource = nomsApplications;
+                Button confirmation = new Button() { Text = "Ok", Left = 150, Width = 100, Top = 80, DialogResult = DialogResult.OK };
+                form.Controls.Add(label);
+                form.Controls.Add(comboBox);
+                form.Controls.Add(confirmation);
+                form.AcceptButton = confirmation;
 
-                // Supprimer le bouton correspondant
-                delete_buttons(sender, e, false);
-                Form1_Load(null, null); // Recharge l'affichage
-            }
-            else
-            {
-                MessageBox.Show("Aucune application trouvée", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    string nom = comboBox.SelectedItem.ToString();
+
+                    // Trouver et supprimer l'élément
+                    Logiciel logicielASupprimer = logiciels.FirstOrDefault(l => l.NomAffichage.Equals(nom, StringComparison.OrdinalIgnoreCase));
+
+                    if (logicielASupprimer != null)
+                    {
+                        logiciels.Remove(logicielASupprimer); // Supprimer l'élément
+                        File.WriteAllText(jsonPath, JsonConvert.SerializeObject(logiciels, Formatting.Indented)); // Sauvegarder les modifications
+                        // Reset de l'affichage
+                        delete_buttons(sender, e, false);
+                        Form1_Load(null, null); // Recharge l'affichage
+                    }
+                    else
+                    {
+                        MessageBox.Show("Aucune application trouvé", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
             }
         }
 
@@ -222,6 +236,66 @@ namespace Lanceur_logiciel
                 {
                     File.Delete(jsonPath);
                     MessageBox.Show("Toutes les applications ont été supprimées", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            // crée une fenêtre de dialogue pour demander le nom de l'application à renommer avec une choice box
+            string jsonPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "logiciel.json");
+
+            if (!File.Exists(jsonPath)) // Vérifier si le fichier qui liste les applications existe
+            {
+                MessageBox.Show("Aucune application enregistrée", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string contenuJson = File.ReadAllText(jsonPath);
+            List<Logiciel> logiciels = JsonConvert.DeserializeObject<List<Logiciel>>(contenuJson) ?? new List<Logiciel>();
+
+            // Créer une liste de noms d'applications
+            List<string> nomsApplications = logiciels.Select(l => l.NomAffichage).ToList();
+
+            // Créer une boîte de dialogue avec une liste déroulante
+            using (Form form = new Form())
+            {
+                Label label = new Label() { Left = 50, Top = 20, Text = "Sélectionnez une application à renommer" };
+                ComboBox comboBox = new ComboBox() { Left = 50, Top = 50, Width = 200 };
+                comboBox.DataSource = nomsApplications;
+                Button confirmation = new Button() { Text = "Ok", Left = 150, Width = 100, Top = 80, DialogResult = DialogResult.OK };
+                form.Controls.Add(label);
+                form.Controls.Add(comboBox);
+                form.Controls.Add(confirmation);
+                form.AcceptButton = confirmation;
+
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    string nom = comboBox.SelectedItem.ToString();
+
+                    // Trouver et renommer l'élément
+                    Logiciel logicielARenommer = logiciels.FirstOrDefault(l => l.NomAffichage.Equals(nom, StringComparison.OrdinalIgnoreCase));
+
+                    if (logicielARenommer != null)
+                    {
+                        string nouveauNom = Microsoft.VisualBasic.Interaction.InputBox("Nouveau nom de l'application", "Renommer une application", "");
+                        if (string.IsNullOrWhiteSpace(nouveauNom)) // Vérifier si le nom est vide
+                        {
+                            MessageBox.Show("Veuillez entrer un nom d'application valide", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
+
+                        logicielARenommer.NomAffichage = nouveauNom; // Renommer l'élément
+                        File.WriteAllText(jsonPath, JsonConvert.SerializeObject(logiciels, Formatting.Indented)); // Sauvegarder les modifications
+
+                        // Reset de l'affichage
+                        delete_buttons(sender, e, false);
+                        Form1_Load(null, null); // Recharge l'affichage
+                    }
+                    else
+                    {
+                        MessageBox.Show("Aucune application trouvé", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                 }
             }
         }
