@@ -166,7 +166,7 @@ namespace Lanceur_logiciel
             // Créer une boîte de dialogue avec une liste déroulante
             using (Form form = new Form())
             {
-                Label label = new Label() { Left = 50, Top = 20, Text = "Sélectionnez une application à supprimer" };
+                Label label = new Label() { Left = 50, Top = 20, Width = 250, Text = "Sélectionnez une application à supprimer" };
                 ComboBox comboBox = new ComboBox() { Left = 50, Top = 50, Width = 200 };
                 comboBox.DataSource = nomsApplications;
                 Button confirmation = new Button() { Text = "Ok", Left = 150, Width = 100, Top = 80, DialogResult = DialogResult.OK };
@@ -260,7 +260,7 @@ namespace Lanceur_logiciel
             // Créer une boîte de dialogue avec une liste déroulante
             using (Form form = new Form())
             {
-                Label label = new Label() { Left = 50, Top = 20, Text = "Sélectionnez une application à renommer" };
+                Label label = new Label() { Left = 50, Top = 20, Width = 250, Text = "Sélectionnez une application à renommer" };
                 ComboBox comboBox = new ComboBox() { Left = 50, Top = 50, Width = 200 };
                 comboBox.DataSource = nomsApplications;
                 Button confirmation = new Button() { Text = "Ok", Left = 150, Width = 100, Top = 80, DialogResult = DialogResult.OK };
