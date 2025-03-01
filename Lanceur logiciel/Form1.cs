@@ -20,21 +20,22 @@ namespace Lanceur_logiciel
         {
             public string Nom { get; set; }
             public string Chemin { get; set; }
+            public string extention { get; set; }
         }
 
         /// <summary>
-        /// le but est d'ouvrir une boîte de dialogue pour ouvrir un fichier executant
+        /// le but est d'ouvrir une boîte de dialogue pour ouvrir un fichier executant ou des racourcis
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void button1_Click(object sender, EventArgs e)
         {
             // Création d'une boîte de dialogue pour ouvrir un fichier
-            OpenFileDialog openFileDialog1 = new OpenFileDialog() 
+            OpenFileDialog openFileDialog1 = new OpenFileDialog()
             {
                 FileName = "Choisir un fichier",
-                Filter = "Fichiers executant (*.exe)|*.exe",
-                Title = "Choisir un éxecutable"
+                Filter = "Fichier executable|*.exe|Fichier raccourcie|*.lnk",
+                Title = "Choisir un éxecutable ou raccourcie"
             };
 
             // Si l'utilisateur clique sur OK
@@ -47,7 +48,8 @@ namespace Lanceur_logiciel
                 Logiciel nouveauLogiciel = new Logiciel
                 {
                     Nom = Path.GetFileNameWithoutExtension(fichier),
-                    Chemin = Path.GetDirectoryName(fichier)
+                    Chemin = Path.GetDirectoryName(fichier),
+                    extention = Path.GetExtension(fichier)
                 };
 
                 // chemin vers le jsooon
@@ -114,7 +116,7 @@ namespace Lanceur_logiciel
                             // Lancer l'application
                             var startInfo = new System.Diagnostics.ProcessStartInfo()
                             {
-                                FileName = Path.Combine(item.Chemin, item.Nom + ".exe"),
+                                FileName = Path.Combine(item.Chemin, item.Nom + item.extention),
                                 UseShellExecute = true // Permet d'éviter une détection de la schizophrénie de Windows Defender
                             };
                             System.Diagnostics.Process.Start(startInfo);
