@@ -35,7 +35,7 @@ namespace Lanceur_logiciel
             OpenFileDialog openFileDialog1 = new OpenFileDialog()
             {
                 FileName = "Choisir un fichier",
-                Filter = "Fichier executable|*.exe|Fichier raccourcie|*.lnk",
+                Filter = "Fichiers pris en charge (*.exe, *.lnk, *.bat)|*.exe;*.lnk;*.bat",
                 Title = "Choisir un éxecutable ou raccourcie"
             };
 
@@ -116,12 +116,33 @@ namespace Lanceur_logiciel
                         try
                         {
                             // Lancer l'application
-                            var startInfo = new System.Diagnostics.ProcessStartInfo()
+                            var filePath = Path.Combine(item.Chemin, item.NomFichier + item.Extention);
+                            if (item.Extention.Equals(".bat", StringComparison.OrdinalIgnoreCase))
                             {
-                                FileName = Path.Combine(item.Chemin, item.NomFichier + item.Extention),
-                                UseShellExecute = true // Permet d'éviter une détection de la schizophrénie de Windows Defender
-                            };
-                            System.Diagnostics.Process.Start(startInfo);
+                                if (!File.Exists(filePath))
+                                {
+                                    MessageBox.Show("Le fichier n'existe pas : " + filePath);
+                                    return;
+                                }
+
+                                var startInfo = new System.Diagnostics.ProcessStartInfo()
+                                {
+                                    FileName = "wt.exe",
+                                    Arguments = $"--startingDirectory \"{item.Chemin}\" cmd /k \"{filePath}\"",
+                                    UseShellExecute = true // wt.exe nécessite UseShellExecute = true
+                                };
+                                System.Diagnostics.Process.Start(startInfo);
+                            }
+                            else
+                            {
+                                var startInfo = new System.Diagnostics.ProcessStartInfo()
+                                {
+                                    FileName = filePath,
+                                    WorkingDirectory = item.Chemin, // pour que l'application puisse trouver ses ressources (dll et autres fichiers)
+                                    UseShellExecute = true
+                                };
+                                System.Diagnostics.Process.Start(startInfo);
+                            }
                         }
                         catch (Exception ex)
                         {
